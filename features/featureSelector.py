@@ -11,12 +11,12 @@ STEP_SIZE = 8
 BATCH_SIZE = 4
 # INPUT_DIM = (BATCH_SIZE, )
 
-trainSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
+trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                               'spectrograms',
                               transform=ToTensor(STEP_SIZE),
                               train=True)
 
-testSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
+testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              'spectrograms',
                              transform=ToTensor(STEP_SIZE),
                              train=False)

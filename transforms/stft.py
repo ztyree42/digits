@@ -3,7 +3,7 @@ import scipy.signal as signal
 import matplotlib.pyplot as plt
 import numpy as np
 
-# rate, samples = wav.read('/home/ztyree/projects/spokenDigits/recordings/1_jackson_0.wav')
+# rate, samples = wav.read('/home/ubuntu/projects/spokenDigits/recordings/1_jackson_0.wav')
 
 # OVERLAP = 96
 # PERSEG = 128
@@ -14,7 +14,7 @@ import numpy as np
 
 # times, arr = signal.istft(Zxx, fs=rate, nperseg=PERSEG, noverlap=OVERLAP)
 
-# wav.write('/home/ztyree/Desktop/test.wav', rate=rate,
+# wav.write('/home/ubuntu/Desktop/test.wav', rate=rate,
 #             data=arr.astype(np.dtype('i2')))
 
 # # plt.pcolormesh(t, f, np.abs(Zxx))

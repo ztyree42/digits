@@ -2,8 +2,8 @@ import scipy.io.wavfile as wav
 import numpy as np
 
 
-# path_0 = '/home/ztyree/projects/spokenDigits/recordings/0_jackson_0.wav'
-# path_1 = '/home/ztyree/projects/spokenDigits/recordings/1_jackson_0.wav'
+# path_0 = '/home/ubuntu/projects/spokenDigits/recordings/0_jackson_0.wav'
+# path_1 = '/home/ubuntu/projects/spokenDigits/recordings/1_jackson_0.wav'
 
 # sound_0 = AudioSegment.from_file(path_0)
 # sound_1 = AudioSegment.from_file(path_1)
