@@ -87,6 +87,7 @@ class LSTM_TAGGER(nn.Module):
 
 
 model = LSTM_TAGGER(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
+model.cuda()
 # criterion = nn.NLLLoss()
 criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=.001, weight_decay=1e-5)
@@ -124,7 +125,7 @@ for epoch in range(50):
         model.zero_grad()
         batch['feature'].requires_grad_()
 
-        score = model(batch['feature'])
+        score = model(batch['feature'].cuda())
         loss = criterion(score[:, -1, :], batch['label'].detach())
 
         loss.backward()
