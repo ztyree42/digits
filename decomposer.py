@@ -32,7 +32,7 @@ testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              train=False,
                              mixing=True)
 
-BATCH_SIZE = 20
+BATCH_SIZE = 60
 
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
@@ -131,7 +131,7 @@ for epoch in range(50):
         loss.backward()
         optimizer.step()
         running_loss += loss / len(trainSet)
-        if idx % (len(trainSet) // BATCH_SIZE) == 899:
+        if idx % (len(trainSet) // BATCH_SIZE) == 59:
             with torch.no_grad():
                 inputs = batch['feature'].cuda()
                 score = model(inputs)
