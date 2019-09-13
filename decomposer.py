@@ -126,14 +126,14 @@ for epoch in range(50):
         batch['feature'].requires_grad_()
 
         score = model(batch['feature'].cuda())
-        loss = criterion(score[:, -1, :], batch['label'].detach())
+        loss = criterion(score[:, -1, :], batch['label'].cuda().detach())
 
         loss.backward()
         optimizer.step()
         running_loss += loss / len(trainSet)
         if idx % (len(trainSet) // BATCH_SIZE) == 899:
             with torch.no_grad():
-                inputs = batch['feature']
+                inputs = batch['feature'].cuda()
                 score = model(inputs)
                 _, l = score[:, -1, :].topk(2,1)
                 v, t = batch['label'].topk(2,1)
