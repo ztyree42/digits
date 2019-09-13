@@ -20,13 +20,13 @@ tsfm = tv.transforms.Compose([
     OneHot(10)
 ])
 
-trainSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
+trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                               'recordings',
                               transform=tsfm,
                               train=True,
                               mixing = True)
 
-testSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
+testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              'recordings',
                              transform=tsfm,
                              train=False,
