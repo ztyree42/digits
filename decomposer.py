@@ -32,7 +32,7 @@ testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              train=False,
                              mixing=True)
 
-BATCH_SIZE = 4
+BATCH_SIZE = 20
 
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
@@ -75,7 +75,7 @@ class LSTM_TAGGER(nn.Module):
         self.hidden_dim = hidden_dim
 
         self.lstm = nn.LSTM(input_dim, hidden_dim,
-                            batch_first=True, num_layers=1)
+                            batch_first=True, num_layers=2)
 
         self.label = nn.Linear(hidden_dim, target_size)
 
@@ -140,3 +140,6 @@ for epoch in range(50):
                 print('Loss: ', running_loss.item())
                 print('Target: ', t)
                 print('Estimate: ', l)
+
+
+torch.save(model.state_dict(), 'models/decomposition/latest.pt')
