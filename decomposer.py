@@ -123,8 +123,8 @@ optimizer = optim.Adam(model.parameters(), lr=.001, weight_decay=1e-5)
 #                 print('Loss: ', train_loss.item())
 #                 print('Target: ', batch['label'])
 #                 print('Estimate: ', [l1, l2])
-
-for epoch in range(50):
+prev_loss = 0
+for epoch in range(200):
     train_loss = 0
     val_loss = 0
     np.random.seed()
@@ -145,16 +145,7 @@ for epoch in range(50):
                 loss = criterion(score[:, -1, :], batch['label'].cuda())
                 val_loss += loss / len(testSet)
         writer.add_scalar('loss/val', val_loss, epoch)
+        if val_loss < prev_loss:
+            torch.save(model.state_dict(), 'models/decomposition/latest.pt')
+        prev_loss = val_loss
     writer.add_scalar('loss/train', train_loss, epoch)
-        # if idx % (len(trainSet) // BATCH_SIZE) == 59:
-        #     with torch.no_grad():
-        #         inputs = batch['feature'].cuda()
-        #         score = model(inputs)
-        #         _, l = score[:, -1, :].topk(2,1)
-        #         v, t = batch['label'].topk(2,1)
-        #         print('Loss: ', train_loss.item())
-        #         print('Target: ', t)
-        #         print('Estimate: ', l)
-
-
-torch.save(model.state_dict(), 'models/decomposition/latest.pt')
