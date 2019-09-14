@@ -99,7 +99,7 @@ for epoch in range(200):
             for idx, batch in enumerate(testLoader):
                 score = model.eval()(batch['feature'].cuda())
                 loss = criterion(score[:, -1, :], batch['label'].cuda())
-                val_loss += loss / len(testSet)
+                val_loss += BATCH_SIZE*(loss / len(testSet))
         writer.add_scalar('mixClass/loss/val', val_loss, epoch)
         if best_loss is None:
             best_loss = val_loss
