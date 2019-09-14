@@ -104,6 +104,6 @@ for epoch in range(200):
         if best_loss is None:
             best_loss = val_loss
         if val_loss < best_loss:
-            torch.save(model.state_dict(), 'models/decomposition/latest.pt')
+            torch.save(model.state_dict(), '/home/ubuntu/projects/digits/digits/models/decomposition/latest.pt')
             best_loss = val_loss
     writer.add_scalar('mixClass/loss/train', train_loss, epoch)
