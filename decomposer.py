@@ -99,7 +99,7 @@ criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=.001, weight_decay=1e-5)
 
 # for epoch in range(1):
-#     running_loss = 0
+#     train_loss = 0
 #     np.random.seed()
 #     for idx, batch in enumerate(trainLoader):
 #         model.zero_grad()
@@ -113,19 +113,20 @@ optimizer = optim.Adam(model.parameters(), lr=.001, weight_decay=1e-5)
 #         loss = loss1 + loss2
 #         loss.backward()
 #         optimizer.step()
-#         running_loss += loss / len(trainSet)
+#         train_loss += loss / len(trainSet)
 #         if idx % (len(trainSet) // BATCH_SIZE) == 449:
 #             with torch.no_grad():
 #                 inputs = batch['feature']
 #                 score1, score2 = model(inputs)
 #                 _, l1 = score1[:, -1, :].max(1)
 #                 _, l2 = score2[:, -1, :].max(1)
-#                 print('Loss: ', running_loss.item())
+#                 print('Loss: ', train_loss.item())
 #                 print('Target: ', batch['label'])
 #                 print('Estimate: ', [l1, l2])
 
 for epoch in range(50):
-    running_loss = 0
+    train_loss = 0
+    val_loss = 0
     np.random.seed()
     for idx, batch in enumerate(trainLoader):
         model.zero_grad()
@@ -136,15 +137,22 @@ for epoch in range(50):
 
         loss.backward()
         optimizer.step()
-        running_loss += loss / len(trainSet)
-    writer.add_scalar('loss/train', running_loss, epoch)
+        train_loss += loss / len(trainSet)
+        if (epoch % 5) == 0:
+            with torch.no_grad():
+                for idx, batch in enumerate(testLoader):
+                    score = model(batch['feature'].cuda())
+                    loss = criterion(score[:, -1, :], batch['label'].cuda())
+                    train_loss += loss / len(testSet)
+        writer.add_scalar('loss/val', val_loss, epoch)
+    writer.add_scalar('loss/train', train_loss, epoch)
         # if idx % (len(trainSet) // BATCH_SIZE) == 59:
         #     with torch.no_grad():
         #         inputs = batch['feature'].cuda()
         #         score = model(inputs)
         #         _, l = score[:, -1, :].topk(2,1)
         #         v, t = batch['label'].topk(2,1)
-        #         print('Loss: ', running_loss.item())
+        #         print('Loss: ', train_loss.item())
         #         print('Target: ', t)
         #         print('Estimate: ', l)
 
