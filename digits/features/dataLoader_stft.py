@@ -8,11 +8,10 @@ from skimage import io, transform
 import pandas as pd
 from torchvision import transforms, utils
 import numpy as np
-from features.featureSelector import AE
 import matplotlib.pyplot as plt
 import scipy.io.wavfile as wav
-from transforms.mixer import Mixer
-from transforms.stft import ToSTFT
+from digits.transforms.mixer import Mixer
+from digits.transforms.stft import ToSTFT
 
 
 class spokenDigitDataset(Dataset):

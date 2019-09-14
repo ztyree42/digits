@@ -10,7 +10,7 @@ from digits.transforms.normalize import Normalize
 
 
 from torch.utils.data import DataLoader, Dataset
-from features.dataLoader_stft import spokenDigitDataset, ToTensor
+from digits.features.dataLoader_stft import spokenDigitDataset, ToTensor
 
 writer = SummaryWriter()
 
