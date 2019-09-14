@@ -52,7 +52,6 @@ class AE(nn.Module):
         super(AE, self).__init__()
         self.hidden_dim = hidden_dim
         self.encoder = nn.Sequential(
-            nn.Dropout(dropout),
             nn.Linear(input_dim, hidden_dim[0]),
             nn.ReLU(True),
             nn.Dropout(dropout),
