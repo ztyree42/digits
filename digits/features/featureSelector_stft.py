@@ -78,45 +78,45 @@ class AE(nn.Module):
         x = self.decoder(x)
         return x
 
-num_epochs = 500
-learning_rate = 1e-3
+# num_epochs = 500
+# learning_rate = 1e-3
 
-model = AE(2*65*STEP_SIZE, [256,128,64,32])
-model.cuda()
+# model = AE(2*65*STEP_SIZE, [256,128,64,32])
+# model.cuda()
 
-criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(
-    model.parameters(), lr = learning_rate, weight_decay=1e-5
-)
+# criterion = nn.MSELoss()
+# optimizer = torch.optim.Adam(
+#     model.parameters(), lr = learning_rate, weight_decay=1e-5
+# )
 
-best_loss = None
-for epoch in range(num_epochs):
-    train_loss = 0
-    val_loss = 0
-    for idx, batch in enumerate(trainLoader):
-        model.zero_grad()
-        model.train()
-        batch = batch.cuda().view(batch.size(0), -1)
-        batch.requires_grad_()
+# best_loss = None
+# for epoch in range(num_epochs):
+#     train_loss = 0
+#     val_loss = 0
+#     for idx, batch in enumerate(trainLoader):
+#         model.zero_grad()
+#         model.train()
+#         batch = batch.cuda().view(batch.size(0), -1)
+#         batch.requires_grad_()
 
-        output = model(batch.cuda())
-        loss = criterion(output, batch.cuda().detach())
+#         output = model(batch.cuda())
+#         loss = criterion(output, batch.cuda().detach())
 
-        loss.backward()
-        optimizer.step()
-        train_loss += loss / len(trainSet)
-    if (epoch % 5) == 0:
-        with torch.no_grad():
-            for idx, batch in enumerate(testLoader):
-                batch = batch.cuda().view(batch.size(0), -1)
-                output = model.eval()(batch.cuda())
-                loss = criterion(output, batch.cuda())
-                val_loss += loss / len(testSet)
-        writer.add_scalar('dae/loss/val', val_loss, epoch)
-        if best_loss is None:
-            best_loss = val_loss
-        if val_loss < best_loss:
-            torch.save(model.state_dict(),
-                       '/home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt')
-            best_loss = val_loss
-    writer.add_scalar('dae/loss/train', train_loss, epoch)
+#         loss.backward()
+#         optimizer.step()
+#         train_loss += loss / len(trainSet)
+#     if (epoch % 5) == 0:
+#         with torch.no_grad():
+#             for idx, batch in enumerate(testLoader):
+#                 batch = batch.cuda().view(batch.size(0), -1)
+#                 output = model.eval()(batch.cuda())
+#                 loss = criterion(output, batch.cuda())
+#                 val_loss += loss / len(testSet)
+#         writer.add_scalar('dae/loss/val', val_loss, epoch)
+#         if best_loss is None:
+#             best_loss = val_loss
+#         if val_loss < best_loss:
+#             torch.save(model.state_dict(),
+#                        '/home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt')
+#             best_loss = val_loss
+#     writer.add_scalar('dae/loss/train', train_loss, epoch)

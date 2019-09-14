@@ -27,7 +27,7 @@ trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                               'recordings',
                               transform=tsfm,
                               train=True,
-                              mixing = True)
+                              mixing=True)
 
 testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              'recordings',
@@ -58,7 +58,8 @@ class LSTM_TAGGER(nn.Module):
         self.hidden_dim = hidden_dim
         self.drop_out = nn.Dropout(drop_out)
         self.lstm = nn.LSTM(input_dim, hidden_dim,
-                            batch_first=True, num_layers=2)
+                            batch_first=True, num_layers=2,
+                            bidirectional=True)
 
         self.label = nn.Linear(hidden_dim, target_size)
 
