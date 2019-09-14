@@ -57,18 +57,21 @@ class LSTM_TAGGER(nn.Module):
         super(LSTM_TAGGER, self).__init__()
         self.hidden_dim = hidden_dim
         self.drop_out = nn.Dropout(drop_out)
-        self.lstm = nn.LSTM(input_dim, hidden_dim,
+        self.lstm = nn.LSTM(input_dim, hidden_dim // 2,
                             batch_first=True, num_layers=2,
                             bidirectional=True)
 
-        self.label = nn.Linear(hidden_dim, target_size)
+        self.dense_0 = nn.Linear(hidden_dim, hidden_dim//2)
+        self.dense_1 = nn.Linear(hidden_dim//2, target_size)
 
         self.norm = nn.LayerNorm(target_size)
 
     def forward(self, column):
         column = self.drop_out(column)
         lstm_out, _ = self.lstm(column)
-        logits = self.label(lstm_out)
+        logits = self.dense_0(lstm_out)
+        logits = nn.ReLU(logits)
+        logits = self.dense_1(logits)
         # normedLogits = self.norm(logits)
         # score = torch.sigmoid(normedLogits)
         return logits
