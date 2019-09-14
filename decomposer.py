@@ -131,6 +131,7 @@ for epoch in range(200):
     np.random.seed()
     for idx, batch in enumerate(trainLoader):
         model.zero_grad()
+        model.train()
         batch['feature'].requires_grad_()
 
         score = model(batch['feature'].cuda())
