@@ -138,13 +138,13 @@ for epoch in range(50):
         loss.backward()
         optimizer.step()
         train_loss += loss / len(trainSet)
-        if (epoch % 5) == 0:
-            with torch.no_grad():
-                for idx, batch in enumerate(testLoader):
-                    score = model(batch['feature'].cuda())
-                    loss = criterion(score[:, -1, :], batch['label'].cuda())
-                    train_loss += loss / len(testSet)
-        writer.add_scalar('loss/val', val_loss, epoch)
+    if (epoch % 5) == 0:
+        with torch.no_grad():
+            for idx, batch in enumerate(testLoader):
+                score = model(batch['feature'].cuda())
+                loss = criterion(score[:, -1, :], batch['label'].cuda())
+                train_loss += loss / len(testSet)
+    writer.add_scalar('loss/val', val_loss, epoch)
     writer.add_scalar('loss/train', train_loss, epoch)
         # if idx % (len(trainSet) // BATCH_SIZE) == 59:
         #     with torch.no_grad():
