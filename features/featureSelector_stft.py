@@ -42,9 +42,7 @@ trainLoader = DataLoader(trainSet, batch_size=BATCH_SIZE, shuffle=True,
 testLoader = DataLoader(testSet, batch_size=BATCH_SIZE, shuffle=False,
                         num_workers=4)
 
-##
-next(iter(trainLoader)).size()
-##
+
 class AE(nn.Module):
 
     def __init__(self, input_dim, hidden_dim, dropout=.5):
