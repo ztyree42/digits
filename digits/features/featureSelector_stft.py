@@ -15,7 +15,7 @@ from digits.features.dataLoader_stft import spokenDigitDataset, ToTensor
 writer = SummaryWriter()
 
 STEP_SIZE = 8
-BATCH_SIZE = 4
+BATCH_SIZE = 60
 # INPUT_DIM = (BATCH_SIZE, )
 
 tsfm = tv.transforms.Compose([
@@ -95,7 +95,7 @@ for epoch in range(num_epochs):
     for idx, batch in enumerate(trainLoader):
         model.zero_grad()
         model.train()
-        batch = batch.view(batch.size(0), -1)
+        batch = batch.cuda().view(batch.size(0), -1)
         batch.requires_grad_()
 
         output = model(batch.cuda())
@@ -107,6 +107,7 @@ for epoch in range(num_epochs):
     if (epoch % 5) == 0:
         with torch.no_grad():
             for idx, batch in enumerate(testLoader):
+                batch = batch.cuda().view(batch.size(0), -1)
                 output = model.eval()(batch.cuda())
                 loss = criterion(output, batch.cuda())
                 val_loss += loss / len(testSet)
