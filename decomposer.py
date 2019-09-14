@@ -95,35 +95,10 @@ class LSTM_TAGGER(nn.Module):
 
 model = LSTM_TAGGER(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
 model.cuda()
-# criterion = nn.NLLLoss()
+
 criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=.001, weight_decay=1e-5)
 
-# for epoch in range(1):
-#     train_loss = 0
-#     np.random.seed()
-#     for idx, batch in enumerate(trainLoader):
-#         model.zero_grad()
-#         batch['feature'].requires_grad_()
-
-#         score1, score2 = model(batch['feature'])
-        
-#         loss1 = criterion(score1[:, -1, :], batch['label'][:,0].detach())
-#         loss2 = criterion(score2[:, -1, :], batch['label'][:,1].detach())
-        
-#         loss = loss1 + loss2
-#         loss.backward()
-#         optimizer.step()
-#         train_loss += loss / len(trainSet)
-#         if idx % (len(trainSet) // BATCH_SIZE) == 449:
-#             with torch.no_grad():
-#                 inputs = batch['feature']
-#                 score1, score2 = model(inputs)
-#                 _, l1 = score1[:, -1, :].max(1)
-#                 _, l2 = score2[:, -1, :].max(1)
-#                 print('Loss: ', train_loss.item())
-#                 print('Target: ', batch['label'])
-#                 print('Estimate: ', [l1, l2])
 best_loss = None
 for epoch in range(200):
     train_loss = 0
@@ -146,10 +121,10 @@ for epoch in range(200):
                 score = model.eval()(batch['feature'].cuda())
                 loss = criterion(score[:, -1, :], batch['label'].cuda())
                 val_loss += loss / len(testSet)
-        writer.add_scalar('loss/val', val_loss, epoch)
+        writer.add_scalar('mixClass/loss/val', val_loss, epoch)
         if best_loss is None:
             best_loss = val_loss
         if val_loss < best_loss:
             torch.save(model.state_dict(), 'models/decomposition/latest.pt')
             best_loss = val_loss
-    writer.add_scalar('loss/train', train_loss, epoch)
+    writer.add_scalar('mixClass/loss/train', train_loss, epoch)

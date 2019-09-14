@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision as tv
+from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import matplotlib.pyplot as plt
 from transforms.mixer import Mixer
@@ -10,6 +11,8 @@ from transforms.normalize import Normalize
 
 from torch.utils.data import DataLoader, Dataset
 from features.dataLoader_stft import spokenDigitDataset, ToTensor
+
+writer = SummaryWriter()
 
 STEP_SIZE = 8
 BATCH_SIZE = 4
@@ -30,7 +33,8 @@ trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
 testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              'recordings',
                              transform=tsfm,
-                             train=False)
+                             train=False,
+                             mixing=True)
 
 trainLoader = DataLoader(trainSet, batch_size=BATCH_SIZE, shuffle=True,
                          num_workers=4)
@@ -43,16 +47,20 @@ next(iter(trainLoader)).size()
 ##
 class AE(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim):
+    def __init__(self, input_dim, hidden_dim, dropout=.5):
         super(AE, self).__init__()
         self.hidden_dim = hidden_dim
         self.encoder = nn.Sequential(
+            nn.Dropout(dropout),
             nn.Linear(input_dim, hidden_dim[0]),
             nn.ReLU(True),
+            nn.Dropout(dropout),
             nn.Linear(hidden_dim[0], hidden_dim[1]),
             nn.ReLU(True),
+            nn.Dropout(dropout),
             nn.Linear(hidden_dim[1], hidden_dim[2]),
             nn.ReLU(True),
+            nn.Dropout(dropout),
             nn.Linear(hidden_dim[2], hidden_dim[3])
         )
         self.decoder = nn.Sequential(
@@ -75,63 +83,40 @@ num_epochs = 200
 learning_rate = 1e-3
 
 model = AE(2*65*STEP_SIZE, [256,128,64,32])
+model.cuda()
 
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(
     model.parameters(), lr = learning_rate, weight_decay=1e-5
 )
 
+best_loss = None
 for epoch in range(num_epochs):
-    running_loss = 0
+    train_loss = 0
+    val_loss = 0
     for idx, batch in enumerate(trainLoader):
-        # batch = (batch[:, 0, :, :]**2 + batch[:, 1, :, :]**2)**.5
+        model.zero_grad()
+        model.train()
         batch = batch.view(batch.size(0), -1)
         batch.requires_grad_()
 
-        output = model(batch)
-        loss = criterion(output, batch.detach())
+        output = model(batch.cuda())
+        loss = criterion(output, batch.cuda().detach())
 
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-        running_loss += loss / len(trainSet)
-        # print('Loss: ', running_loss.item())
-        if idx % (len(trainSet) // BATCH_SIZE) == 449:
-            print('Loss: ', running_loss.item());
-
-# with torch.no_grad():
-#     real = batch.view(batch.size(0), 2, 65, 8).detach().numpy()[0]
-#     real = (real[0,:,:]**2 + real[1,:,:]**2)**.5
-#     reconstructed = output.view(output.size(0), 2, 65, 8).detach().numpy()[0]
-#     reconstructed = (reconstructed[0, :, :]**2 + reconstructed[1, :, :]**2)**.5
-#     np.expand_dims(real, 0)
-#     np.expand_dims(reconstructed, 0)
-#     imgs = [real, reconstructed]
-#     plt.imshow(real)
-
-torch.save(model.state_dict(), 'features/models/decomposition/latest.pt')
-
-# loading
-# model = AE(64*STEP_SIZE, [128, 64, 32, 16])
-# model.load_state_dict(torch.load('features/models/latest.pt'))
-# model.eval()
-
-# i = 0
-# for idx, batch in enumerate(testLoader):
-#     with torch.no_grad():
-#         batch = batch.view(batch.size(0), -1)
-#         output = model(batch)
-#         real = batch.view(batch.size(0), 64, 8).detach().numpy()[0]
-#         reconstructed = output.view(output.size(0), 64, 8).detach().numpy()[0]
-#         plt.imshow(reconstructed, cmap='gray')
-#         i += 1
-#         if i == 4:
-#             break
-
-# batch = next(iter(trainLoader))
-# batch = batch.view(batch.size(0), -1)
-# model.encoder(batch[0])
-
-# for i in range(trainSet.__len__()):
-#     print(trainSet[i].min(), trainSet[i].max())
+        train_loss += loss / len(trainSet)
+    if (epoch % 5) == 0:
+        with torch.no_grad():
+            for idx, batch in enumerate(testLoader):
+                output = model.eval()(batch.cuda())
+                loss = criterion(output, batch.cuda())
+                val_loss += loss / len(testSet)
+        writer.add_scalar('dae/loss/val', val_loss, epoch)
+        if best_loss is None:
+            best_loss = val_loss
+        if val_loss < best_loss:
+            torch.save(model.state_dict(),
+                       'features/models/decomposition/latest.pt')
+            best_loss = val_loss
+    writer.add_scalar('dae/loss/train', train_loss, epoch)
