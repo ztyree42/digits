@@ -73,10 +73,10 @@ OUTPUT_DIM = 10
 
 class LSTM_TAGGER(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, target_size):
+    def __init__(self, input_dim, hidden_dim, target_size, drop_out=.5):
         super(LSTM_TAGGER, self).__init__()
         self.hidden_dim = hidden_dim
-
+        self.drop_out = nn.Dropout(drop_out)
         self.lstm = nn.LSTM(input_dim, hidden_dim,
                             batch_first=True, num_layers=2)
 
@@ -85,6 +85,7 @@ class LSTM_TAGGER(nn.Module):
         self.norm = nn.LayerNorm(target_size)
 
     def forward(self, column):
+        column = self.drop_out(column)
         lstm_out, _ = self.lstm(column)
         logits = self.label(lstm_out)
         normedLogits = self.norm(logits)
@@ -141,7 +142,7 @@ for epoch in range(200):
     if (epoch % 5) == 0:
         with torch.no_grad():
             for idx, batch in enumerate(testLoader):
-                score = model(batch['feature'].cuda())
+                score = model.eval()(batch['feature'].cuda())
                 loss = criterion(score[:, -1, :], batch['label'].cuda())
                 val_loss += loss / len(testSet)
         writer.add_scalar('loss/val', val_loss, epoch)
