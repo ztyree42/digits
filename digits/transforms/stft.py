@@ -30,5 +30,5 @@ class ToSTFT():
     def __call__(self, sample):
         samples = sample['feature']
         Zxx = self.stft(samples)[2]
-        Zxx = np.stack((np.abs(Zxx), np.angle(Zxx)), axis=-1)
+        Zxx = np.stack((np.real(Zxx), np.imag(Zxx)), axis=-1)
         return {'feature': Zxx, 'label': sample['label']}

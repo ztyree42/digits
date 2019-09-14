@@ -13,10 +13,14 @@ import matplotlib.pyplot as plt
 import scipy.io.wavfile as wav
 from transforms.mixer import Mixer
 from transforms.stft import ToSTFT
+import scipy.io.wavfile as wav
+import scipy.signal as signal
 
 class spokenDigitDataset(Dataset):
     
-    def __init__(self, digitDir, digitType = 'spectrograms', transform = None, train = True, sanity=False, rate=8000, mixing=False):
+    def __init__(self, digitDir, digitType = 'spectrograms', 
+                 transform = None, train = True, sanity=False, 
+                 rate=8000, mixing=False, full=False):
         """
         Args:
             digitDir (string): base dir of spoken digits
@@ -31,6 +35,7 @@ class spokenDigitDataset(Dataset):
         self.sanity = sanity
         self.rate = rate
         self.mix = mixing
+        self.full = full
         self.digitFrame = self._frameBuilder()
     
     def instanceF(self, path):
@@ -100,8 +105,18 @@ class spokenDigitDataset(Dataset):
         ])
         l0 = self.digitFrame.iloc[idx0, 0]
         l1 = self.digitFrame.iloc[idx1, 0]
-        
-        sample = {'feature': [p0, p1], 'label': [l0, l1]}
+        label = [l0, l1]
+        if self.full:
+            label = [p0, p1]
+            for i,s in enumerate(label):
+                _, s = wav.read(s)
+                s = s[:4000]
+                s = np.pad(s, 0, 4000 - s.shape[0], 'constant')
+                _, _, s = signal.stft(s, 8000, 128, 96) 
+                s = np.stack((np.real(s), np.imag(s)), axis=-1)
+                label[i] = s
+
+        sample = {'feature': [p0, p1], 'label': label}
         return sample
 
     def _getRecording(self, path, idx):
@@ -121,25 +136,6 @@ class spokenDigitDataset(Dataset):
         sample = {'feature': image, 'label': label}
         
         return sample
-
-# todo: this class is only appropriate to call on spectrograms atm
-#       likely needs to be made more general (factory?)
-# class ToTensor(object):
-#     """Converts ndarrays in sample to Tensors."""
-#     def __init__(self, stepSize):
-#         self.stepSize = stepSize
-
-#     def __call__(self, sample):
-#         feature, label = sample['feature'], sample['label']
-
-#         # swap color axis from np (HxWxC) to torch (CxHxW)
-#         feature = feature.transpose((2,0,1))
-#         numSubArray = feature.shape[2] // self.stepSize
-#         featureList = np.split(feature, numSubArray, axis=2)
-#         # featureList = [x.reshape((1,feature.shape[1])) for x in featureList]
-#         feature = np.array(featureList)
-#         return {'feature': torch.from_numpy(feature).squeeze().type(torch.FloatTensor),
-#                  'label': torch.as_tensor(label)}
 
 class ToTensor(object):
     """Converts ndarrays in sample to Tensors."""
