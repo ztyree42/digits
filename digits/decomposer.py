@@ -68,14 +68,14 @@ class LSTM_TAGGER(nn.Module):
         column = self.drop_out(column)
         lstm_out, _ = self.lstm(column)
         logits = self.label(lstm_out)
-        normedLogits = self.norm(logits)
-        score = torch.sigmoid(normedLogits)
-        return score
+        # normedLogits = self.norm(logits)
+        # score = torch.sigmoid(normedLogits)
+        return logits
 
 model = LSTM_TAGGER(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
 model.cuda()
 
-criterion = nn.BCELoss()
+criterion = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters(), lr=.001, weight_decay=1e-5)
 
 best_loss = None
