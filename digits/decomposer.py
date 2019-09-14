@@ -48,7 +48,7 @@ testLoader = DataLoader(testSet, batch_size=BATCH_SIZE, shuffle=False,
 
 
 INPUT_DIM = 32
-HIDDEN_DIM = 128
+HIDDEN_DIM = 256
 OUTPUT_DIM = 10
 
 class LSTM_TAGGER(nn.Module):
