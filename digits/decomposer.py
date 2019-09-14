@@ -18,7 +18,7 @@ tsfm = tv.transforms.Compose([
     Mixer(),
     ToSTFT(),
     ToTensor(8),
-    Latent('features/models/decomposition/latest.pt', 
+    Latent('/home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt', 
         hidden_dims=[256,128,64,32], input_dim=2*65),
     OneHot(10)
 ])
