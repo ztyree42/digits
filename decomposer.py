@@ -144,7 +144,7 @@ for epoch in range(50):
                 score = model(batch['feature'].cuda())
                 loss = criterion(score[:, -1, :], batch['label'].cuda())
                 val_loss += loss / len(testSet)
-    writer.add_scalar('loss/val', val_loss, epoch)
+        writer.add_scalar('loss/val', val_loss, epoch)
     writer.add_scalar('loss/train', train_loss, epoch)
         # if idx % (len(trainSet) // BATCH_SIZE) == 59:
         #     with torch.no_grad():
