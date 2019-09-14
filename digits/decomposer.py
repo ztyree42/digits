@@ -41,10 +41,10 @@ def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
 trainLoader = DataLoader(trainSet, batch_size=BATCH_SIZE, shuffle=True,
-                         num_workers=4, worker_init_fn=worker_init_fn)
+                         num_workers=8, worker_init_fn=worker_init_fn)
 
 testLoader = DataLoader(testSet, batch_size=BATCH_SIZE, shuffle=False,
-                        num_workers=4, worker_init_fn=worker_init_fn)
+                        num_workers=8, worker_init_fn=worker_init_fn)
 
 
 INPUT_DIM = 32
@@ -93,7 +93,7 @@ for epoch in range(200):
 
         loss.backward()
         optimizer.step()
-        train_loss += loss / len(trainSet)
+        train_loss += BATCH_SIZE*(loss / len(trainSet))
     if (epoch % 5) == 0:
         with torch.no_grad():
             for idx, batch in enumerate(testLoader):
