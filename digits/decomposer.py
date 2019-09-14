@@ -51,26 +51,6 @@ INPUT_DIM = 32
 HIDDEN_DIM = 128
 OUTPUT_DIM = 10
 
-
-# class LSTM_TAGGER(nn.Module):
-
-#     def __init__(self, input_dim, hidden_dim, target_size):
-#         super(LSTM_TAGGER, self).__init__()
-#         self.hidden_dim = hidden_dim
-
-#         self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True, num_layers=2)
-
-#         self.label1 = nn.Linear(hidden_dim, target_size)
-#         self.label2 = nn.Linear(hidden_dim, target_size)
-
-#     def forward(self, column):
-#         lstm_out, _ = self.lstm(column)
-#         logits1 = self.label1(lstm_out)
-#         score1 = F.log_softmax(logits1, dim=2)
-#         logits2 = self.label2(lstm_out)
-#         score2 = F.log_softmax(logits2, dim=2)
-#         return score1, score2
-
 class LSTM_TAGGER(nn.Module):
 
     def __init__(self, input_dim, hidden_dim, target_size, drop_out=.5):
@@ -91,7 +71,6 @@ class LSTM_TAGGER(nn.Module):
         normedLogits = self.norm(logits)
         score = torch.sigmoid(normedLogits)
         return score
-
 
 model = LSTM_TAGGER(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
 model.cuda()

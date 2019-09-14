@@ -36,12 +36,15 @@ testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              train=False,
                              mixing=True)
 
+
+def worker_init_fn(worker_id):
+    np.random.seed(np.random.get_state()[1][0] + worker_id)
+
 trainLoader = DataLoader(trainSet, batch_size=BATCH_SIZE, shuffle=True,
-                         num_workers=4)
+                         num_workers=4, worker_init_fn=worker_init_fn)
 
 testLoader = DataLoader(testSet, batch_size=BATCH_SIZE, shuffle=False,
-                        num_workers=4)
-
+                        num_workers=4, worker_init_fn=worker_init_fn)
 
 class AE(nn.Module):
 
@@ -76,8 +79,7 @@ class AE(nn.Module):
         x = self.decoder(x)
         return x
 
-
-num_epochs = 200
+num_epochs = 400
 learning_rate = 1e-3
 
 model = AE(2*65*STEP_SIZE, [256,128,64,32])
