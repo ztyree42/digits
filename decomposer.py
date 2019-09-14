@@ -10,6 +10,9 @@ from transforms.normalize import Normalize
 from transforms.oneHot import OneHot
 import torchvision as tv
 from dataLoader import spokenDigitDataset, ToTensor, Latent
+from torch.utils.tensorboard import SummaryWriter
+
+writer = SummaryWriter()
 
 tsfm = tv.transforms.Compose([
     Mixer(),
@@ -134,15 +137,16 @@ for epoch in range(50):
         loss.backward()
         optimizer.step()
         running_loss += loss / len(trainSet)
-        if idx % (len(trainSet) // BATCH_SIZE) == 59:
-            with torch.no_grad():
-                inputs = batch['feature'].cuda()
-                score = model(inputs)
-                _, l = score[:, -1, :].topk(2,1)
-                v, t = batch['label'].topk(2,1)
-                print('Loss: ', running_loss.item())
-                print('Target: ', t)
-                print('Estimate: ', l)
+    writer.add_scalar('loss/train', running_loss, epoch)
+        # if idx % (len(trainSet) // BATCH_SIZE) == 59:
+        #     with torch.no_grad():
+        #         inputs = batch['feature'].cuda()
+        #         score = model(inputs)
+        #         _, l = score[:, -1, :].topk(2,1)
+        #         v, t = batch['label'].topk(2,1)
+        #         print('Loss: ', running_loss.item())
+        #         print('Target: ', t)
+        #         print('Estimate: ', l)
 
 
 torch.save(model.state_dict(), 'models/decomposition/latest.pt')
