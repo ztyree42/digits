@@ -4,9 +4,9 @@ import torchvision as tv
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import matplotlib.pyplot as plt
-from transforms.mixer import Mixer
-from transforms.stft import ToSTFT
-from transforms.normalize import Normalize
+from digits.transforms.mixer import Mixer
+from digits.transforms.stft import ToSTFT
+from digits.transforms.normalize import Normalize
 
 
 from torch.utils.data import DataLoader, Dataset
