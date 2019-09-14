@@ -32,7 +32,7 @@ testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              train=False,
                              mixing=True)
 
-BATCH_SIZE = 60
+BATCH_SIZE = 60     
 
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
@@ -79,10 +79,13 @@ class LSTM_TAGGER(nn.Module):
 
         self.label = nn.Linear(hidden_dim, target_size)
 
+        self.norm = nn.LayerNorm(target_size)
+
     def forward(self, column):
         lstm_out, _ = self.lstm(column)
         logits = self.label(lstm_out)
-        score = torch.sigmoid(logits)
+        normedLogits = self.norm(logits)
+        score = torch.sigmoid(normedLogits)
         return score
 
 
