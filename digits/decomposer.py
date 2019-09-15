@@ -11,45 +11,69 @@ from transforms.oneHot import OneHot
 import torchvision as tv
 from dataLoader import spokenDigitDataset, ToTensor, Latent
 from torch.utils.tensorboard import SummaryWriter
+import yaml
+
+with open('/home/ztyree/projects/digits/digits/params.yaml') as f:
+    args = yaml.load(f, Loader=yaml.FullLoader)
+
+args = args['decomposer']
+d_args = args['data']
+f_args = args['transforms']
+t_args = args['training']
+
+EMBEDDING_PATH = f_args['embedding_path']
+STEP_SIZE = f_args['step_size']
+EMEDDING_HIDDEN = f_args['embedding_hidden'] 
+EMBEDDING_INPUT = f_args['embedding_input']
+
+DATA_PATH = d_args['path']
+DATA_TYPE = d_args['type']
+MIXING = d_args['mixing']
+
+BATCH_SIZE = t_args['batch_size']
+NUM_WORKERS =t_args['num_workers']
+INPUT_DIM = t_args['input_dim']
+HIDDEN_DIM = t_args['hidden_dim']
+OUTPUT_DIM = t_args['output_dim']
+LEARNING_RATE = t_args['learning_rate']
+WEIGHT_DECAY = t_args['weight_decay']
+EPOCHS = t_args['epochs']
+DROP_OUT = t_args['drop_out']
+MODEL_PATH = t_args['model_path']
 
 writer = SummaryWriter()
 
 tsfm = tv.transforms.Compose([
     Mixer(),
     ToSTFT(),
-    ToTensor(8),
-    Latent('/home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt', 
-        hidden_dims=[256,128,64,32], input_dim=2*65),
+    ToTensor(STEP_SIZE),
+    Latent(EMBEDDING_PATH, 
+        hidden_dims=EMEDDING_HIDDEN, input_dim=EMBEDDING_INPUT),
     OneHot(10)
 ])
-
-trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
-                              'recordings',
-                              transform=tsfm,
-                              train=True,
-                              mixing=True)
-
-testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
-                             'recordings',
-                             transform=tsfm,
-                             train=False,
-                             mixing=True)
-
-BATCH_SIZE = 60     
 
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
+trainSet = spokenDigitDataset(DATA_PATH,
+                              DATA_TYPE,
+                              transform=tsfm,
+                              train=True,
+                              mixing=MIXING)
+
+testSet = spokenDigitDataset(DATA_PATH,
+                             DATA_TYPE,
+                             transform=tsfm,
+                             train=False,
+                             mixing=MIXING)     
+
 trainLoader = DataLoader(trainSet, batch_size=BATCH_SIZE, shuffle=True,
-                         num_workers=8, worker_init_fn=worker_init_fn)
+                         num_workers=NUM_WORKERS, 
+                         worker_init_fn=worker_init_fn)
 
 testLoader = DataLoader(testSet, batch_size=BATCH_SIZE, shuffle=False,
-                        num_workers=8, worker_init_fn=worker_init_fn)
-
-
-INPUT_DIM = 32
-HIDDEN_DIM = 256
-OUTPUT_DIM = 10
+                        num_workers=NUM_WORKERS, 
+                        worker_init_fn=worker_init_fn)
 
 class LSTM_TAGGER(nn.Module):
 
