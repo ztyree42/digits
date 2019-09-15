@@ -63,6 +63,7 @@ class LSTM_TAGGER(nn.Module):
 
         self.dense_0 = nn.Linear(hidden_dim, hidden_dim//2)
         self.dense_1 = nn.Linear(hidden_dim//2, target_size)
+        self.relu = nn.ReLU()
 
         self.norm = nn.LayerNorm(target_size)
 
@@ -70,7 +71,7 @@ class LSTM_TAGGER(nn.Module):
         column = self.drop_out(column)
         lstm_out, _ = self.lstm(column)
         logits = self.dense_0(lstm_out)
-        logits = nn.ReLU(logits)
+        logits = self.relu(logits)
         logits = self.dense_1(logits)
         # normedLogits = self.norm(logits)
         # score = torch.sigmoid(normedLogits)
