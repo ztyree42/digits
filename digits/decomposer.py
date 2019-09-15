@@ -13,7 +13,7 @@ from dataLoader import spokenDigitDataset, ToTensor, Latent
 from torch.utils.tensorboard import SummaryWriter
 import yaml
 
-with open('/home/ztyree/projects/digits/digits/params.yaml') as f:
+with open('/home/ubuntu/projects/digits/digits/params.yaml') as f:
     args = yaml.load(f, Loader=yaml.FullLoader)
 
 args = args['decomposer']
@@ -77,7 +77,7 @@ testLoader = DataLoader(testSet, batch_size=BATCH_SIZE, shuffle=False,
 
 class LSTM_TAGGER(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, target_size, drop_out=.5):
+    def __init__(self, input_dim, hidden_dim, target_size, drop_out=DROP_OUT):
         super(LSTM_TAGGER, self).__init__()
         self.hidden_dim = hidden_dim
         self.drop_out = nn.Dropout(drop_out)
@@ -105,10 +105,11 @@ model = LSTM_TAGGER(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
 model.cuda()
 
 criterion = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters(), lr=.001, weight_decay=1e-5)
+optimizer = optim.Adam(model.parameters(), 
+    lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
 best_loss = None
-for epoch in range(200):
+for epoch in range(EPOCHS):
     train_loss = 0
     val_loss = 0
     np.random.seed()
@@ -133,6 +134,6 @@ for epoch in range(200):
         if best_loss is None:
             best_loss = val_loss
         if val_loss < best_loss:
-            torch.save(model.state_dict(), '/home/ubuntu/projects/digits/digits/models/decomposition/latest.pt')
+            torch.save(model.state_dict(), MODEL_PATH)
             best_loss = val_loss
     writer.add_scalar('mixClass/loss/train', train_loss, epoch)

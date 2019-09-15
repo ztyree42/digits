@@ -25,4 +25,32 @@ decomposer:
     epochs: 200
     drop_out: .5
     model_path: /home/ubuntu/projects/digits/digits/models/decomposition/latest.pt
-    
+
+full_decomposer:
+  data:
+    path: /home/ubuntu/projects/spokenDigits
+    type: recordings
+    mixing: True
+    full: True
+
+  transforms:
+    step_size: 8
+    emedding_path: /home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt
+    embedding_hidden: 
+      - 256
+      - 128
+      - 64
+      - 32
+    emedding_input: 130
+  
+  training:
+    batch_size: 60
+    num_workers: 8
+    input_dim: 32
+    hidden_dim: 256
+    output_dim: 10
+    learning_rate: 5.e-6
+    weight_decay: 1.e-5
+    epochs: 200
+    drop_out: .5
+    model_path: /home/ubuntu/projects/digits/digits/models/decomposition/latest.pt
