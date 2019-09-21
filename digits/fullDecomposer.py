@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision as tv
 
-from transforms.mixer import Mixer
-from transforms.stft import ToSTFT
-from dataLoader import spokenDigitDataset, ToTensor, Latent
+from digits.transforms.mixer import Mixer
+from digits.transforms.stft import ToSTFT
+from digits.dataLoader import spokenDigitDataset, ToTensor, Latent
 from torch.utils.tensorboard import SummaryWriter
 import yaml
 
@@ -19,7 +19,7 @@ t_args = args['training']
 
 EMBEDDING_PATH = f_args['embedding_path']
 STEP_SIZE = f_args['step_size']
-EMEDDING_HIDDEN = f_args['embedding_hidden']
+EMBEDDING_HIDDEN = f_args['embedding_hidden']
 EMBEDDING_INPUT = f_args['embedding_input']
 
 DATA_PATH = d_args['path']
@@ -45,7 +45,7 @@ tsfm = tv.transforms.Compose([
     ToSTFT(),
     ToTensor(STEP_SIZE),
     Latent(EMBEDDING_PATH,
-           hidden_dims=EMEDDING_HIDDEN, input_dim=EMBEDDING_INPUT),
+           hidden_dims=EMBEDDING_HIDDEN, input_dim=EMBEDDING_INPUT),
     OneHot(10)
 ])
 

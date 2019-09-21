@@ -8,11 +8,11 @@ from skimage import io, transform
 import pandas as pd
 from torchvision import transforms, utils
 import numpy as np
-from features.featureSelector_stft import AE
+from digits.features.featureSelector_stft import AE
 import matplotlib.pyplot as plt
 import scipy.io.wavfile as wav
-from transforms.mixer import Mixer
-from transforms.stft import ToSTFT
+from digits.transforms.mixer import Mixer
+from digits.transforms.stft import ToSTFT
 import scipy.io.wavfile as wav
 import scipy.signal as signal
 

@@ -24,13 +24,13 @@ tsfm = tv.transforms.Compose([
     ToTensor(STEP_SIZE)
 ])
 
-trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
+trainSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
                               'recordings',
                               transform=tsfm,
                               train=True,
                               mixing = True)
 
-testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
+testSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
                              'recordings',
                              transform=tsfm,
                              train=False,
@@ -117,6 +117,6 @@ class AE(nn.Module):
 #             best_loss = val_loss
 #         if val_loss < best_loss:
 #             torch.save(model.state_dict(),
-#                        '/home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt')
+#                        '/home/ztyree/projects/digits/digits/features/models/decomposition/latest.pt')
 #             best_loss = val_loss
 #     writer.add_scalar('dae/loss/train', train_loss, epoch)

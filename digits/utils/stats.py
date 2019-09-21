@@ -17,7 +17,7 @@ tsfm = tv.transforms.Compose([
     ToTensor(8)
 ])
 
-trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
+trainSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
                               'recordings',
                               transform=tsfm,
                               train=True,

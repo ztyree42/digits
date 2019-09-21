@@ -13,7 +13,7 @@ from dataLoader import spokenDigitDataset, ToTensor, Latent
 from torch.utils.tensorboard import SummaryWriter
 import yaml
 
-with open('/home/ubuntu/projects/digits/digits/params.yaml') as f:
+with open('/home/ztyree/projects/digits/digits/params.yaml') as f:
     args = yaml.load(f, Loader=yaml.FullLoader)
 
 args = args['decomposer']
@@ -23,7 +23,7 @@ t_args = args['training']
 
 EMBEDDING_PATH = f_args['embedding_path']
 STEP_SIZE = f_args['step_size']
-EMEDDING_HIDDEN = f_args['embedding_hidden'] 
+EMBEDDING_HIDDEN = f_args['embedding_hidden'] 
 EMBEDDING_INPUT = f_args['embedding_input']
 
 DATA_PATH = d_args['path']
@@ -48,7 +48,7 @@ tsfm = tv.transforms.Compose([
     ToSTFT(),
     ToTensor(STEP_SIZE),
     Latent(EMBEDDING_PATH, 
-        hidden_dims=EMEDDING_HIDDEN, input_dim=EMBEDDING_INPUT),
+        hidden_dims=EMBEDDING_HIDDEN, input_dim=EMBEDDING_INPUT),
     OneHot(10)
 ])
 
