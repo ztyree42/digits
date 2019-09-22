@@ -7,6 +7,13 @@ import matplotlib.pyplot as plt
 from digits.transforms.mixer import Mixer
 from digits.transforms.stft import ToSTFT
 from digits.transforms.normalize import Normalize
+import argparse
+
+parser = argparse.ArgumentParser('Denoising AutoEncoder')
+parser.add_argument('--train',
+    nargs='?', const=True, default=False,
+    help='Set to train Mode')
+args = parser.parse_args()
 
 
 from torch.utils.data import DataLoader, Dataset
@@ -24,13 +31,13 @@ tsfm = tv.transforms.Compose([
     ToTensor(STEP_SIZE)
 ])
 
-trainSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
+trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                               'recordings',
                               transform=tsfm,
                               train=True,
                               mixing = True)
 
-testSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
+testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                              'recordings',
                              transform=tsfm,
                              train=False,
@@ -78,45 +85,47 @@ class AE(nn.Module):
         x = self.decoder(x)
         return x
 
-# num_epochs = 500
-# learning_rate = 1e-3
+if args.train:
 
-# model = AE(2*65*STEP_SIZE, [256,128,64,32])
-# model.cuda()
+    num_epochs = 1000
+    learning_rate = 1e-3
 
-# criterion = nn.MSELoss()
-# optimizer = torch.optim.Adam(
-#     model.parameters(), lr = learning_rate, weight_decay=1e-5
-# )
+    model = AE(2*65*STEP_SIZE, [256,128,64,32])
+    model.cuda()
 
-# best_loss = None
-# for epoch in range(num_epochs):
-#     train_loss = 0
-#     val_loss = 0
-#     for idx, batch in enumerate(trainLoader):
-#         model.zero_grad()
-#         model.train()
-#         batch = batch.cuda().view(batch.size(0), -1)
-#         batch.requires_grad_()
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(
+        model.parameters(), lr = learning_rate, weight_decay=1e-5
+    )
 
-#         output = model(batch.cuda())
-#         loss = criterion(output, batch.cuda().detach())
+    best_loss = None
+    for epoch in range(num_epochs):
+        train_loss = 0
+        val_loss = 0
+        for idx, batch in enumerate(trainLoader):
+            model.zero_grad()
+            model.train()
+            batch = batch.cuda().view(batch.size(0), -1)
+            batch.requires_grad_()
 
-#         loss.backward()
-#         optimizer.step()
-#         train_loss += loss / len(trainSet)
-#     if (epoch % 5) == 0:
-#         with torch.no_grad():
-#             for idx, batch in enumerate(testLoader):
-#                 batch = batch.cuda().view(batch.size(0), -1)
-#                 output = model.eval()(batch.cuda())
-#                 loss = criterion(output, batch.cuda())
-#                 val_loss += loss / len(testSet)
-#         writer.add_scalar('dae/loss/val', val_loss, epoch)
-#         if best_loss is None:
-#             best_loss = val_loss
-#         if val_loss < best_loss:
-#             torch.save(model.state_dict(),
-#                        '/home/ztyree/projects/digits/digits/features/models/decomposition/latest.pt')
-#             best_loss = val_loss
-#     writer.add_scalar('dae/loss/train', train_loss, epoch)
+            output = model(batch.cuda())
+            loss = criterion(output, batch.cuda().detach())
+
+            loss.backward()
+            optimizer.step()
+            train_loss += loss / len(trainSet)
+        if (epoch % 5) == 0:
+            with torch.no_grad():
+                for idx, batch in enumerate(testLoader):
+                    batch = batch.cuda().view(batch.size(0), -1)
+                    output = model.eval()(batch.cuda())
+                    loss = criterion(output, batch.cuda())
+                    val_loss += loss / len(testSet)
+            writer.add_scalar('dae/loss/val', val_loss, epoch)
+            if best_loss is None:
+                best_loss = val_loss
+            if val_loss < best_loss:
+                torch.save(model.state_dict(),
+                        '/home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt')
+                best_loss = val_loss
+        writer.add_scalar('dae/loss/train', train_loss, epoch)

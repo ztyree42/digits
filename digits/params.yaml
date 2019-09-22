@@ -1,12 +1,12 @@
 decomposer:
   data:
-    path: /home/ztyree/projects/spokenDigits
+    path: /home/ubuntu/projects/spokenDigits
     type: recordings
     mixing: True
 
   transforms:
     step_size: 8
-    embedding_path: /home/ztyree/projects/digits/digits/features/models/decomposition/latest.pt
+    embedding_path: /home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt
     embedding_hidden: 
       - 256
       - 128
@@ -19,23 +19,23 @@ decomposer:
     num_workers: 8
     input_dim: 32
     hidden_dim: 256
-    output_dim: 10
+    output_dim: 32
     learning_rate: 5.e-6
     weight_decay: 1.e-5
     epochs: 200
     drop_out: .5
-    model_path: /home/ztyree/projects/digits/digits/models/decomposition/latest.pt
+    model_path: /home/ubuntu/projects/digits/digits/models/decomposition/latest.pt
 
 full_decomposer:
   data:
-    path: /home/ztyree/projects/spokenDigits
+    path: /home/ubuntu/projects/spokenDigits
     type: recordings
     mixing: True
     full: True
 
   transforms:
     step_size: 8
-    embedding_path: /home/ztyree/projects/digits/digits/features/models/decomposition/latest.pt
+    embedding_path: /home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt
     embedding_hidden: 
       - 256
       - 128
@@ -48,9 +48,9 @@ full_decomposer:
     num_workers: 8
     input_dim: 32
     hidden_dim: 256
-    output_dim: 10
-    learning_rate: 5.e-6
+    output_dim: 32
+    learning_rate: 1.e-6
     weight_decay: 1.e-5
-    epochs: 200
+    epochs: 500
     drop_out: .5
-    model_path: /home/ztyree/projects/digits/digits/models/decomposition/latest.pt
+    model_path: /home/ubuntu/projects/digits/digits/models/fullDecomposition/latest.pt

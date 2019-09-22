@@ -1,52 +1,95 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
 import torchvision as tv
-from dataLoader import spokenDigitDataset, ToTensor, Latent
-from transforms.mixer import Mixer
-from transforms.stft import ToSTFT
-import scipy.io.wavfile as wav
-import matplotlib.pyplot as plt
+from torch.utils.data import DataLoader
 import numpy as np
+
+from digits.transforms.mixer import Mixer
+from digits.transforms.stft import ToSTFT
+from digits.dataLoader import spokenDigitDataset, ToTensor, Latent
+from torch.utils.tensorboard import SummaryWriter
+import yaml
+
+with open('/home/ubuntu/projects/digits/digits/params.yaml') as f:
+    args = yaml.load(f, Loader=yaml.FullLoader)
+
+args = args['full_decomposer']
+d_args = args['data']
+f_args = args['transforms']
+t_args = args['training']
+
+EMBEDDING_PATH = f_args['embedding_path']
+STEP_SIZE = f_args['step_size']
+EMBEDDING_HIDDEN = f_args['embedding_hidden']
+EMBEDDING_INPUT = f_args['embedding_input']
+
+DATA_PATH = d_args['path']
+DATA_TYPE = d_args['type']
+MIXING = d_args['mixing']
+FULL = d_args['full']
+
+BATCH_SIZE = t_args['batch_size']
+NUM_WORKERS = t_args['num_workers']
+INPUT_DIM = t_args['input_dim']
+HIDDEN_DIM = t_args['hidden_dim']
+OUTPUT_DIM = t_args['output_dim']
+LEARNING_RATE = t_args['learning_rate']
+WEIGHT_DECAY = t_args['weight_decay']
+EPOCHS = t_args['epochs']
+DROP_OUT = t_args['drop_out']
+MODEL_PATH = t_args['model_path']
+
+writer = SummaryWriter()
 
 tsfm = tv.transforms.Compose([
     Mixer(),
     ToSTFT(),
-    ToTensor(8)
+    ToTensor(STEP_SIZE, True)
 ])
 
-trainSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
-                              'recordings',
+
+def worker_init_fn(worker_id):
+    np.random.seed(np.random.get_state()[1][0] + worker_id)
+
+
+trainSet = spokenDigitDataset(DATA_PATH,
+                              DATA_TYPE,
                               transform=tsfm,
                               train=True,
-                              mixing=True)
+                              mixing=MIXING,
+                              full=FULL)
 
-BATCH_SIZE = 1
+testSet = spokenDigitDataset(DATA_PATH,
+                             DATA_TYPE,
+                             transform=tsfm,
+                             train=False,
+                             mixing=MIXING,
+                             full=FULL)
 
-trainLoader = DataLoader(trainSet, batch_size=BATCH_SIZE, shuffle=False,
-                         num_workers=4)
-                         
-real_sum = 0
-real_2_mom = 0
-imag_sum = 0
-imag_2_mom = 0
+trainLoader = DataLoader(trainSet, batch_size=BATCH_SIZE, shuffle=True,
+                         num_workers=NUM_WORKERS,
+                         worker_init_fn=worker_init_fn)
 
-for s in trainLoader:
-    real_sum += s['feature'][:,:,0,:,:].mean()
-    real_2_mom += ((s['feature'][:,:, 0, :, :])**2).mean()
-    imag_sum += (s['feature'][:,:, 1, :, :]).mean()
-    imag_2_mom += ((s['feature'][:,:, 1, :, :])**2).mean()
+testLoader = DataLoader(testSet, batch_size=BATCH_SIZE, shuffle=False,
+                        num_workers=NUM_WORKERS,
+                        worker_init_fn=worker_init_fn)
 
-real_sum /= trainLoader.__len__()
-real_2_mom /= trainLoader.__len__()
-imag_sum /= trainLoader.__len__()
-imag_2_mom /= trainLoader.__len__()
+MEAN = [b['feature'].mean() for i, b in enumerate(trainLoader)]
+MEAN = [m.item() for m in MEAN]
+STD = [b['feature'].std() for i, b in enumerate(trainLoader)]
+STD = [s.item() for s in STD]
 
-real_std = (real_2_mom - real_sum**2)**.5
-imag_std = (imag_2_mom - imag_sum**2)**.5
+#mean 19.5
+#std 1869
 
-print(real_sum, real_std)
+MEAN2 = [torch.stack(b['label']).mean() for i, b in enumerate(trainLoader)]
+MEAN2 = [m.item() for m in MEAN2]
+STD2 = [torch.stack(b['label']).std() for i, b in enumerate(trainLoader)]
+STD2 = [s.item() for s in STD2]
 
-print(imag_sum, imag_std)
+#mean 21.5
+#std 2400
+
+#norm mean 20
+#norm std 2130

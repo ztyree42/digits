@@ -111,11 +111,11 @@ class spokenDigitDataset(Dataset):
             for i,s in enumerate(label):
                 _, s = wav.read(s)
                 s = s[:4000]
-                s = np.pad(s, 0, 4000 - s.shape[0], 'constant')
-                _, _, s = signal.stft(s, 8000, 128, 96) 
+                s = np.pad(s, (0, 4000 - s.shape[0]), 'constant')
+                _, _, s = signal.stft(s, 
+                    fs=8000, nperseg=128, noverlap=96) 
                 s = np.stack((np.real(s), np.imag(s)), axis=-1)
                 label[i] = s
-
         sample = {'feature': [p0, p1], 'label': label}
         return sample
 
@@ -140,8 +140,9 @@ class spokenDigitDataset(Dataset):
 class ToTensor(object):
     """Converts ndarrays in sample to Tensors."""
 
-    def __init__(self, stepSize):
+    def __init__(self, stepSize, full=False):
         self.stepSize = stepSize
+        self.full = full
 
     def __call__(self, sample):
         feature, label = sample['feature'], sample['label']
@@ -152,13 +153,29 @@ class ToTensor(object):
             numSubArray, axis=2)
         # featureList = [x.reshape((1,feature.shape[1])) for x in featureList]
         feature = np.array(featureList)
-        return {'feature': torch.from_numpy(
-                    feature).squeeze().type(torch.FloatTensor),
-                'label': torch.from_numpy(np.array(label))}
+        if not self.full:
+            return {'feature': torch.from_numpy(
+                        feature).squeeze().type(torch.FloatTensor),
+                    'label': torch.from_numpy(np.array(label))}
+        else:
+            for i, l in enumerate(label):
+                l = l.transpose((2,0,1))
+                numSubArray = l.shape[2] // self.stepSize
+                lList = np.split(l[:, :, :numSubArray*self.stepSize], 
+                    numSubArray, axis=2)
+                l = np.array(lList)
+                l = torch.from_numpy(l).squeeze().type(torch.FloatTensor)
+                label[i] = l
+            return {'feature': torch.from_numpy(
+                feature).squeeze().type(torch.FloatTensor),
+                'label': label}
 
 class Latent():
     """Converts images to latent space via simple autoencoder."""
-    def __init__(self, path, step_size=8, hidden_dims = [128, 64, 32, 16], input_dim=64):
+    def __init__(self, path, step_size=8, 
+                 hidden_dims = [128, 64, 32, 16], 
+                 input_dim=64, full=False):
+        self.full = full
         model = AE(input_dim*step_size, hidden_dims)
         model.load_state_dict(torch.load(path))
         model.eval()
@@ -166,8 +183,18 @@ class Latent():
         
     def __call__(self, sample):
         x = sample['feature'].view(sample['feature'].size(0), -1)
-        return {'feature': self.encoder(x).detach(),
-                'label': sample['label']}
+        if not self.full:
+            return {'feature': self.encoder(x).detach(),
+                    'label': sample['label']}
+        else:
+            label = sample['label']
+            for i, l in enumerate(label):
+                l = l.view(l.size(0), -1)
+                label[i] = l
+            label = [self.encoder(l).detach() for l in label]
+            label = torch.stack(label)
+            return {'feature': self.encoder(x).detach(),
+                    'label': label}
 
 def showBatch(batch):
     """Show spectrograms from batch."""

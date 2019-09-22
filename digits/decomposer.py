@@ -13,7 +13,7 @@ from dataLoader import spokenDigitDataset, ToTensor, Latent
 from torch.utils.tensorboard import SummaryWriter
 import yaml
 
-with open('/home/ztyree/projects/digits/digits/params.yaml') as f:
+with open('/home/ubuntu/projects/digits/digits/params.yaml') as f:
     args = yaml.load(f, Loader=yaml.FullLoader)
 
 args = args['decomposer']

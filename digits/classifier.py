@@ -11,12 +11,12 @@ tsfm = tv.transforms.Compose([
     Latent('features/models/classification/latest.pt')
 ])
 
-trainSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
+trainSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                                          'spectrograms',
                                          transform=tsfm,
                                          train = True)
 
-testSet = spokenDigitDataset('/home/ztyree/projects/spokenDigits',
+testSet = spokenDigitDataset('/home/ubuntu/projects/spokenDigits',
                               'spectrograms',
                               transform=tsfm,
                               train=False)
