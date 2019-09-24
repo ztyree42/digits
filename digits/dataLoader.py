@@ -178,6 +178,8 @@ class Latent():
         self.full = full
         model = AE(input_dim*step_size, hidden_dims)
         model.load_state_dict(torch.load(path))
+        # model.load_state_dict(torch.load(path, 
+        #     map_location=lambda storage, loc: storage))
         model.eval()
         self.encoder = model.encoder 
         

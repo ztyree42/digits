@@ -43,14 +43,20 @@ MODEL_PATH = t_args['model_path']
 
 writer = SummaryWriter()
 
+# tsfm = tv.transforms.Compose([
+#     Mixer(),
+#     ToSTFT(),
+#     ToTensor(STEP_SIZE, True),
+#     Latent(EMBEDDING_PATH,
+#            hidden_dims=EMBEDDING_HIDDEN, input_dim=EMBEDDING_INPUT,
+#            full=True),
+#     Normalize(19.5, 1869, 21.5, 2400, True)
+# ])
+
 tsfm = tv.transforms.Compose([
     Mixer(),
     ToSTFT(),
-    ToTensor(STEP_SIZE, True),
-    Latent(EMBEDDING_PATH,
-           hidden_dims=EMBEDDING_HIDDEN, input_dim=EMBEDDING_INPUT,
-           full=True),
-    Normalize(19.5, 1869, 21.5, 2400, True)
+    ToTensor(STEP_SIZE, True)
 ])
 
 
