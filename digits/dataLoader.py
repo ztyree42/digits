@@ -153,9 +153,11 @@ class ToTensor(object):
             numSubArray, axis=2)
         # featureList = [x.reshape((1,feature.shape[1])) for x in featureList]
         feature = np.array(featureList)
+        feature = torch.from_numpy(
+            feature).squeeze().type(torch.FloatTensor)
+        feature = feature.view(feature.size(0), -1)
         if not self.full:
-            return {'feature': torch.from_numpy(
-                        feature).squeeze().type(torch.FloatTensor),
+            return {'feature': feature,
                     'label': torch.from_numpy(np.array(label))}
         else:
             for i, l in enumerate(label):
@@ -165,10 +167,10 @@ class ToTensor(object):
                     numSubArray, axis=2)
                 l = np.array(lList)
                 l = torch.from_numpy(l).squeeze().type(torch.FloatTensor)
+                l = l.view(l.size(0), -1)
                 label[i] = l
-            return {'feature': torch.from_numpy(
-                feature).squeeze().type(torch.FloatTensor),
-                'label': label}
+            return {'feature': feature,
+                'label': torch.stack(label)}
 
 class Latent():
     """Converts images to latent space via simple autoencoder."""

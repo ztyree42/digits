@@ -123,7 +123,6 @@ model.cuda()
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(),
                        lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
-
 best_loss = None
 for epoch in range(EPOCHS):
     train_loss = 0
@@ -153,4 +152,3 @@ for epoch in range(EPOCHS):
             torch.save(model.state_dict(), MODEL_PATH)
             best_loss = val_loss
     writer.add_scalar('mixDecomp/loss/train', train_loss, epoch)
-

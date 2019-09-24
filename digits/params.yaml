@@ -48,9 +48,9 @@ full_decomposer:
     num_workers: 8
     input_dim: 1040
     hidden_dim: 256
-    output_dim: 32
+    output_dim: 1040
     learning_rate: 1.e-6
     weight_decay: 1.e-5
-    epochs: 500
+    epochs: 200
     drop_out: .5
     model_path: /home/ubuntu/projects/digits/digits/models/fullDecomposition/latest.pt

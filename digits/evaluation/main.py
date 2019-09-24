@@ -149,3 +149,7 @@ out = out[0]
 out = np.concatenate(out.numpy(), -1).transpose(1,2,0)
 out = out[:, :, 0] + out[:, :, 1]*1j
 tstft.wav(out, 'sound_mix.wav')
+
+#
+b = next(iter(trainLoader))
+out = model(b['feature'][0])
