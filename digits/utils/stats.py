@@ -45,7 +45,10 @@ writer = SummaryWriter()
 tsfm = tv.transforms.Compose([
     Mixer(),
     ToSTFT(),
-    ToTensor(STEP_SIZE, True)
+    ToTensor(STEP_SIZE, True),
+    Latent(EMBEDDING_PATH,
+           hidden_dims=EMBEDDING_HIDDEN, input_dim=EMBEDDING_INPUT,
+           full=True)
 ])
 
 
@@ -83,9 +86,9 @@ STD = [s.item() for s in STD]
 #mean 19.5
 #std 1869
 
-MEAN2 = [torch.stack(b['label']).mean() for i, b in enumerate(trainLoader)]
+MEAN2 = [b['label'].mean() for i, b in enumerate(trainLoader)]
 MEAN2 = [m.item() for m in MEAN2]
-STD2 = [torch.stack(b['label']).std() for i, b in enumerate(trainLoader)]
+STD2 = [b['label'].std() for i, b in enumerate(trainLoader)]
 STD2 = [s.item() for s in STD2]
 
 #mean 21.5
