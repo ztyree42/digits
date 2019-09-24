@@ -42,14 +42,19 @@ EPOCHS = t_args['epochs']
 DROP_OUT = t_args['drop_out']
 MODEL_PATH = t_args['model_path']
 
+# tsfm = tv.transforms.Compose([
+#     Mixer(),
+#     ToSTFT(),
+#     ToTensor(STEP_SIZE, True),
+#     Latent(EMBEDDING_PATH,
+#            hidden_dims=EMBEDDING_HIDDEN, input_dim=EMBEDDING_INPUT,
+#            full=True),
+#     Normalize(19.5, 1869, 21.5, 2400, True)
+# ])
 tsfm = tv.transforms.Compose([
     Mixer(),
     ToSTFT(),
-    ToTensor(STEP_SIZE, True),
-    Latent(EMBEDDING_PATH,
-           hidden_dims=EMBEDDING_HIDDEN, input_dim=EMBEDDING_INPUT,
-           full=True),
-    Normalize(19.5, 1869, 21.5, 2400, True)
+    ToTensor(STEP_SIZE, True)
 ])
 
 
@@ -136,3 +141,11 @@ out4[0] == feature
 OUT = torch.from_numpy(out4[0])
 out3[0] == OUT.view(OUT.size(0), -1)
 out2[0] == dae.encoder(out3[0])
+
+#
+b = next(iter(trainLoader))
+out = b['feature']
+out = out[0]
+out = np.concatenate(out.numpy(), -1).transpose(1,2,0)
+out = out[:, :, 0] + out[:, :, 1]*1j
+tstft.wav(out, 'sound_mix.wav')
