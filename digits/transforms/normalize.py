@@ -13,7 +13,10 @@ class Normalize():
             feature = sample['feature']
             feature = (feature - self.meanM) / self.stdM
             label = sample['label']
-            label = (label - self.stdS) / self.stdS
+            if isinstance(label, list):
+                label = [(l-self.meanS)/self.stdS for l in label]
+            else:
+                label = (label - self.meanS) / self.stdS
             return {'feature': feature, 'label': label}
         else:
-            return sample
+            return (sample - self.meanM) / self.stdM

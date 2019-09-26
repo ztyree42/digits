@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 
+
 class AE(nn.Module):
-    """Denoising Auto Encoder."""
-    def __init__(self, input_dim, hidden_dim, dropout=.5):
+
+    def __init__(self, input_dim, hidden_dim, dropout=.9):
         super(AE, self).__init__()
         self.hidden_dim = hidden_dim
         self.encoder = nn.Sequential(
@@ -17,8 +18,18 @@ class AE(nn.Module):
             nn.ReLU(True),
             # nn.Dropout(dropout),
             nn.Linear(hidden_dim[2], hidden_dim[3])
+            # nn.ReLU(True),
+            # nn.Dropout(dropout),
+            # nn.Linear(hidden_dim[3], hidden_dim[4])
+            # nn.ReLU(True),
+            # nn.Dropout(dropout),
+            # nn.Linear(hidden_dim[4], hidden_dim[5])
         )
         self.decoder = nn.Sequential(
+            # nn.Linear(hidden_dim[5], hidden_dim[4]),
+            # nn.ReLU(True),
+            # nn.Linear(hidden_dim[4], hidden_dim[3]),
+            # nn.ReLU(True),
             nn.Linear(hidden_dim[3], hidden_dim[2]),
             nn.ReLU(True),
             nn.Linear(hidden_dim[2], hidden_dim[1]),

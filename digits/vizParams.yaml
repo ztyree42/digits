@@ -29,9 +29,9 @@ decomposer:
 full_decomposer:
   data:
     path: /home/ubuntu/projects/spokenDigits
-    type: recordings
-    mixing: True
-    full: True
+    type: spectrograms
+    mixing: False
+    full: False
 
   transforms:
     step_size: 8
@@ -46,6 +46,35 @@ full_decomposer:
   training:
     batch_size: 50
     num_workers: 4
+    input_dim: 128
+    hidden_dim: 512
+    output_dim: 128
+    learning_rate: 1.e-3
+    weight_decay: 1.e-5
+    epochs: 500
+    drop_out: .5
+    model_path: /home/ubuntu/projects/digits/digits/models/fullDecomposition/latest.pt
+
+viz:
+  data:
+    path: /home/ubuntu/projects/spokenDigits
+    type: spectrograms
+    mixing: False
+    full: False
+
+  transforms:
+    step_size: 8
+    embedding_path: /home/ubuntu/projects/digits/digits/features/models/decomposition/latest.pt
+    embedding_hidden: 
+      - 512
+      - 256
+      - 128
+      - 128
+    embedding_input: 65
+  
+  training:
+    batch_size: 1
+    num_workers: 1
     input_dim: 128
     hidden_dim: 512
     output_dim: 128

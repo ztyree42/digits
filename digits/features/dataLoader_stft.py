@@ -149,8 +149,28 @@ class ToTensor(object):
         feature, label = sample['feature'], sample['label']
         
         idx = np.random.randint(0, feature.shape[1] - self.stepSize)
-        feature = feature[:,idx:(idx+self.stepSize),:]
+        feature = feature[:,idx:(idx+self.stepSize)]
 
         # swap color axis from np (HxWxC) to torch (CxHxW)
-        feature = feature.transpose((2, 0, 1))
+        feature = feature.transpose((1, 0))
         return torch.from_numpy(feature).squeeze().type(torch.FloatTensor)
+
+
+# class ToTensor(object):
+#     """Converts ndarrays in sample to Tensors."""
+
+#     def __init__(self, stepSize):
+#         self.stepSize = stepSize
+
+#     def __call__(self, sample):
+#         feature, label = sample['feature'], sample['label']
+#         # swap color axis from np (HxWxC) to torch (CxHxW)
+#         feature = feature.transpose((2, 0, 1))
+#         numSubArray = feature.shape[2] // self.stepSize
+#         featureList = np.split(feature[:, :, :numSubArray*self.stepSize],
+#                                numSubArray, axis=2)
+#         # featureList = [x.reshape((1,feature.shape[1])) for x in featureList]
+#         feature = np.array(featureList)
+#         return {'feature': torch.from_numpy(
+#             feature).squeeze().type(torch.FloatTensor),
+#             'label': torch.from_numpy(np.array(label))}

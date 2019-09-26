@@ -10,7 +10,6 @@ from digits.transforms.stft import ToSTFT
 from digits.transforms.normalize import Normalize
 from digits.dataLoader import spokenDigitDataset, ToTensor, Latent
 from torch.utils.tensorboard import SummaryWriter
-from digits.features.featureSelector_stft import AE
 import yaml
 
 with open('/home/ubuntu/projects/digits/digits/params.yaml') as f:
@@ -42,14 +41,19 @@ EPOCHS = t_args['epochs']
 DROP_OUT = t_args['drop_out']
 MODEL_PATH = t_args['model_path']
 
+writer = SummaryWriter()
+
 tsfm = tv.transforms.Compose([
     Mixer(),
     ToSTFT(),
     ToTensor(STEP_SIZE, True),
+    Normalize(44.5,151,44.5,151,True),
     Latent(EMBEDDING_PATH,
            hidden_dims=EMBEDDING_HIDDEN, input_dim=EMBEDDING_INPUT,
            full=True)
+    # Normalize(2.5, 70, 2.5, 90, full=True)
 ])
+
 # tsfm = tv.transforms.Compose([
 #     Mixer(),
 #     ToSTFT(),
@@ -66,11 +70,22 @@ trainSet = spokenDigitDataset(DATA_PATH,
                               transform=tsfm,
                               train=True,
                               mixing=MIXING,
-                              full=FULL)
+                              full = FULL)
+
+testSet = spokenDigitDataset(DATA_PATH,
+                             DATA_TYPE,
+                             transform=tsfm,
+                             train=False,
+                             mixing=MIXING,
+                             full = FULL)
 
 trainLoader = DataLoader(trainSet, batch_size=BATCH_SIZE, shuffle=True,
                          num_workers=NUM_WORKERS,
                          worker_init_fn=worker_init_fn)
+
+testLoader = DataLoader(testSet, batch_size=BATCH_SIZE, shuffle=False,
+                        num_workers=NUM_WORKERS,
+                        worker_init_fn=worker_init_fn)
 
 
 class LSTM_DECOMPOSER(nn.Module):
@@ -78,13 +93,13 @@ class LSTM_DECOMPOSER(nn.Module):
     def __init__(self, input_dim, hidden_dim, target_size, drop_out=.5):
         super(LSTM_DECOMPOSER, self).__init__()
         self.hidden_dim = hidden_dim
-        self.drop_out = nn.Dropout(drop_out)
+        # self.drop_out = nn.Dropout(drop_out)
         # self.lstm = nn.LSTM(input_dim, hidden_dim // 2,
         #                     batch_first=True, num_layers=2,
         #                     bidirectional=True)
-        self.lstm = nn.LSTM(input_dim, hidden_dim,
-                            batch_first=True, num_layers=2,
-                            bidirectional=False)
+        self.lstm = nn.LSTM(input_dim, hidden_dim//2,
+                            batch_first=True, num_layers=5,
+                            bidirectional=True)
         self.linear11 = nn.Linear(hidden_dim, hidden_dim//2)
         self.linear21 = nn.Linear(hidden_dim, hidden_dim//2)
         self.linear12 = nn.Linear(hidden_dim//2, target_size)
@@ -102,62 +117,41 @@ class LSTM_DECOMPOSER(nn.Module):
         out2 = self.linear22(out2)
         return torch.stack([out1, out2], 1)
 
+
 model = LSTM_DECOMPOSER(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
-model.load_state_dict(torch.load(MODEL_PATH))
-model.eval()
+model.cuda()
 
-dae = AE(STEP_SIZE*EMBEDDING_INPUT, EMBEDDING_HIDDEN)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(),
+                       lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
-dae.load_state_dict(torch.load(EMBEDDING_PATH))
+best_loss = None
+for epoch in range(EPOCHS):
+    train_loss = 0
+    val_loss = 0
+    np.random.seed()
+    for idx, batch in enumerate(trainLoader):
+        model.zero_grad()
+        model.train()
+        batch['feature'].requires_grad_()
 
-tstft = ToSTFT()
+        out = model(batch['feature'].cuda())
+        loss = criterion(out, batch['label'].cuda().detach())
 
-b = next(iter(trainLoader))
-out = b['label']
-out1 = out[0]*2400 + 21.5
+        loss.backward()
+        optimizer.step()
+        train_loss += BATCH_SIZE*(loss / len(trainSet))
+    if (epoch % 5) == 0:
+        with torch.no_grad():
+            for idx, batch in enumerate(testLoader):
+                out = model.eval()(batch['feature'].cuda())
+                loss = criterion(out, batch['label'].cuda())
+                val_loss += BATCH_SIZE*(loss / len(testSet))
+        writer.add_scalar('mixDecomp/loss/val', val_loss, epoch)
+        if best_loss is None:
+            best_loss = val_loss
+        if val_loss < best_loss:
+            torch.save(model.state_dict(), MODEL_PATH)
+            best_loss = val_loss
+    writer.add_scalar('mixDecomp/loss/train', train_loss, epoch)
 
-out2 = dae.decoder(out1)
-out3 = [out2[0], out2[1]]
-out4 = [o.view((15, 2, 65, 8)).detach().numpy() for o in out3]
-out5 = [np.concatenate(o, -1) for o in out4]
-out6 = [o.transpose((1,2,0)) for o in out5]
-out7 = [o[:,:,0] + o[:,:,1]*1j for o in out6]
-
-for i, o in enumerate(out7):
-    tstft.wav(o, f'sound{i}.wav')
-
-# TEST
-OUT = out7[0]
-out6[0] == np.stack((np.real(OUT), np.imag(OUT)), axis=-1)
-out5[0] == out6[0].transpose((2,0,1))
-numSubArray = out5[0].shape[2] // 8
-featureList = np.split(out5[0][:, :, :numSubArray*8],
-                       numSubArray, axis=2)
-feature = np.array(featureList)
-out4[0] == feature
-OUT = torch.from_numpy(out4[0])
-out3[0] == OUT.view(OUT.size(0), -1)
-out2[0] == dae.encoder(out3[0])
-
-#
-b = next(iter(trainLoader))
-out = b['feature']
-out = out[0]
-
-b = next(iter(trainLoader))
-out = b['label'][0]
-out = out[0]
-
-out1 = np.concatenate(out.detach().numpy(), -1).transpose(1, 2, 0)
-out1 = out1[:, :, 0] + out1[:, :, 1]*1j
-tstft.wav(out1, 'sound_mix.wav')
-wav_to_spectrogram('sound_mix.wav', 'spec0.png')
-
-out = out.view(out.size(0), -1)
-out = dae.encoder(out)
-out = dae.decoder(out)
-out = out.view((out.size(0), 2, 65, 8))
-out = np.concatenate(out.detach().numpy(), -1).transpose(1,2,0)
-out = out[:, :, 0] + out[:, :, 1]*1j
-tstft.wav(out, 'sound_mix.wav')
-wav_to_spectrogram('sound_mix.wav', 'spec0.png')

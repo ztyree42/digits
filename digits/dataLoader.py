@@ -67,7 +67,10 @@ class spokenDigitDataset(Dataset):
         return df
     
     def __len__(self):
-        return 2*len(self.digitFrame)
+        if self.mix:
+            return 2*len(self.digitFrame)
+        else:
+            return len(self.digitFrame)
     
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
@@ -84,7 +87,7 @@ class spokenDigitDataset(Dataset):
             if self.digitType == 'spectrograms':
                 sample = self._getSpectrogram(path, idx)
         if self.transform is not None:
-            sample = self.transform(sample)
+            sample['feature'] = self.transform(sample['feature'])
         return sample
     
     def __getMix(self, idx):
@@ -114,7 +117,8 @@ class spokenDigitDataset(Dataset):
                 s = np.pad(s, (0, 4000 - s.shape[0]), 'constant')
                 _, _, s = signal.stft(s, 
                     fs=8000, nperseg=128, noverlap=96) 
-                s = np.stack((np.real(s), np.imag(s)), axis=-1)
+                # s = np.stack((np.real(s), np.imag(s)), axis=-1)
+                s = (np.real(s)**2 + np.imag(s)**2)**.5
                 label[i] = s
         sample = {'feature': [p0, p1], 'label': label}
         return sample
@@ -147,10 +151,10 @@ class ToTensor(object):
     def __call__(self, sample):
         feature, label = sample['feature'], sample['label']
         # swap color axis from np (HxWxC) to torch (CxHxW)
-        feature = feature.transpose((2, 0, 1))
-        numSubArray = feature.shape[2] // self.stepSize
-        featureList = np.split(feature[:,:,:numSubArray*self.stepSize], 
-            numSubArray, axis=2)
+        # feature = feature.transpose((1,0))
+        numSubArray = feature.shape[1] // self.stepSize
+        featureList = np.split(feature[:,:numSubArray*self.stepSize], 
+            numSubArray, axis=1)
         # featureList = [x.reshape((1,feature.shape[1])) for x in featureList]
         feature = np.array(featureList)
         if not self.full:
@@ -159,10 +163,10 @@ class ToTensor(object):
                     'label': torch.from_numpy(np.array(label))}
         else:
             for i, l in enumerate(label):
-                l = l.transpose((2,0,1))
-                numSubArray = l.shape[2] // self.stepSize
-                lList = np.split(l[:, :, :numSubArray*self.stepSize], 
-                    numSubArray, axis=2)
+                # l = l.transpose((1,0))
+                numSubArray = l.shape[1] // self.stepSize
+                lList = np.split(l[:, :numSubArray*self.stepSize], 
+                    numSubArray, axis=1)
                 l = np.array(lList)
                 l = torch.from_numpy(l).squeeze().type(torch.FloatTensor)
                 label[i] = l

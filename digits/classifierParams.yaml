@@ -1,0 +1,19 @@
+classifier:
+  data:
+    path: /home/ubuntu/projects/spokenDigits
+    type: spectrograms
+    mixing: False
+    full: False
+  
+  training:
+    batch_size: 60
+    num_workers: 4
+    input_dim: 32
+    hidden_dim: 256
+    output_dim: 32
+    learning_rate: 5.e-6
+    weight_decay: 1.e-5
+    epochs: 200
+    drop_out: .5
+    model_path: /home/ubuntu/projects/digits/digits/models/classifier/latest.pt
+

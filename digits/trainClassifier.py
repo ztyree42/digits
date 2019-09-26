@@ -6,9 +6,6 @@ from torch.utils.data import DataLoader, Dataset
 import torchvision as tv
 from digits.dataLoader import spokenDigitDataset
 import yaml
-from torch.utils.tensorboard import SummaryWriter
-
-writer = SummaryWriter()
 
 with open('/home/ubuntu/projects/digits/digits/classifierParams.yaml') as f:
     args = yaml.load(f, Loader=yaml.FullLoader)
@@ -76,8 +73,7 @@ class LSTM_TAGGER(nn.Module):
         super(LSTM_TAGGER, self).__init__()
         self.hidden_dim = hidden_dim
 
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers=2, 
-            batch_first=True)
+        self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True)
 
         self.hidden2tag = nn.Linear(hidden_dim, target_size)
 
@@ -89,40 +85,28 @@ class LSTM_TAGGER(nn.Module):
 
 
 model = LSTM_TAGGER(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
-model.cuda()
 criterion = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=.001, weight_decay=1e-5)
 
-best_loss = None
-for epoch in range(100):
-    train_loss = 0
-    val_loss = 0
+for epoch in range(20):
+    running_loss = 0
     for idx, batch in enumerate(trainLoader):
         model.zero_grad()
-        model.train()
         batch['feature'].requires_grad_()
         
-        tag_scores = model(batch['feature'].cuda().view(BATCH_SIZE, 15, -1))
-        loss = criterion(tag_scores[:,-1,:], batch['label'].cuda().detach())
+        tag_scores = model(batch['feature'].view(BATCH_SIZE, 15, -1))
+        loss = criterion(tag_scores[:,-1,:], batch['label'].detach())
         loss.backward()
         optimizer.step()
-        train_loss += BATCH_SIZE*(loss / len(trainSet))
+        running_loss += loss / len(trainSet)
     with torch.no_grad():
-        for idx, batch in enumerate(testLoader):
-            batch = next(iter(testLoader))
-            inputs = batch['feature'].cuda()
-            tag_scores = model.eval()(inputs.view(BATCH_SIZE, 15, -1))
-            loss = criterion(tag_scores[:, -1, :],
-                             batch['label'].cuda().detach())
-            val_loss += BATCH_SIZE*(loss/len(testSet))
-        writer.add_scalar('classifier/loss/val', val_loss, epoch)
-        acc = (tag_scores[:, -1, :].argmax(1) == batch['label'].cuda()).sum().item()/BATCH_SIZE
+        inputs = batch['feature']
+        model.eval()
+        tag_scores = model(inputs.view(BATCH_SIZE, 15, -1))
+        # l = tag_scores[-1,-1,:].argmax()
+        acc = (tag_scores[:, -1, :].argmax(1) == batch['label']).sum().item()/BATCH_SIZE
         acc = round(acc, 2)
-        print('Loss: ', val_loss.item())
+        print('Loss: ', running_loss.item())
+        # print('Target: ', batch['label'][-1])
+        # print('Estimate: ', l)
         print('Accuracy: %', acc)
-        if best_loss is None:
-            best_loss = val_loss
-        if val_loss < best_loss:
-            torch.save(model.state_dict(), MODEL_PATH)
-            best_loss = val_loss
-    writer.add_scalar('classifier/loss/train', train_loss, epoch)
