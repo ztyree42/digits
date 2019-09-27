@@ -1,0 +1,18 @@
+mixedClassifier:
+  data:
+    path: /home/ubuntu/projects/spokenDigits
+    type: mixedSpectrograms
+  
+  training:
+    batch_size: 5000
+    num_workers: 32
+    input_dim: 512
+    hidden_dim: 64
+    output_dim: 10
+    num_layers: 2
+    learning_rate: 5.e-6
+    weight_decay: 1.e-5
+    epochs: 200
+    drop_out: .5
+    model_path: /home/ubuntu/projects/digits/digits/models/mixedClassifier/latest.pt
+

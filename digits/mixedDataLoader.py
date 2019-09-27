@@ -19,7 +19,7 @@ import scipy.signal as signal
 
 class MixedDigits(Dataset):
 
-    def __init__(self, digitDir, digitType='spectrograms',
+    def __init__(self, digitDir, digitType='mixedSpectrograms',
                  transform=None, train=True, rate=8000):
         """
         Args:
@@ -64,9 +64,9 @@ class MixedDigits(Dataset):
         df['instance1'] = df['instance1'].astype(int)
         df['instance2'] = df['instance2'].astype(int)
         if self.train:
-            df = df[(df['instance1'] > 2 | df['instance2'] > 2)]
+            df = df[((df['instance1'] > 2) | (df['instance2'] > 2))]
         else:
-            df = df[(df['instance1'] <=2 & df['instance2'] <=2)]
+            df = df[((df['instance1'] <=2) & (df['instance2'] <=2))]
         return df
 
     def __len__(self):
@@ -77,11 +77,11 @@ class MixedDigits(Dataset):
             idx = idx.tolist()
 
         path = join(self.digitDir, self.digitType, self.digitFrame.iloc[
-            idx, 1
+            idx, -1
         ])
-        if self.digitType == 'recordings':
+        if self.digitType == 'mixedRecordings':
             sample = self._getRecording(path, idx)
-        if self.digitType == 'spectrograms':
+        if self.digitType == 'mixedSpectrograms':
             sample = self._getSpectrogram(path, idx)
         if self.transform is not None:
             sample['feature'] = self.transform(sample['feature'])
@@ -91,15 +91,15 @@ class MixedDigits(Dataset):
         _, samples = wav.read(path)
         label = self.digitFrame.iloc[idx, [0,2]]
 
-        sample = {'feature': samples, 'label': label}
+        sample = {'feature': samples, 'label': label.tolist()}
         return sample
 
     def _getSpectrogram(self, path, idx):
         image = np.delete(io.imread(path), [1, 2, 3], 2)
 
-        label = self.digitFrame.iloc[idx, 0]
+        label = self.digitFrame.iloc[idx, [0,2]]
 
-        sample = {'feature': image, 'label': label}
+        sample = {'feature': image, 'label': label.tolist()}
 
         return sample
 
